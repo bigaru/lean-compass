@@ -1,95 +1,60 @@
-import * as Device from 'expo-device'
-import { Platform, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { CornerDownLeft } from '@tamagui/lucide-icons-2'
+import { useState } from 'react'
+import { Button, Card, Text, TextArea, XStack, YStack } from 'tamagui'
 
-import { AnimatedIcon } from '@/components/animated-icon'
-import { HintRow } from '@/components/hint-row'
-import { ThemedText } from '@/components/themed-text'
-import { ThemedView } from '@/components/themed-view'
-import { WebBadge } from '@/components/web-badge'
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme'
-import { Button } from 'tamagui'
-
-function getDevMenuHint() {
-	if (Platform.OS === 'web') {
-		return <ThemedText type="small">use browser devtools</ThemedText>
-	}
-	if (Device.isDevice) {
-		return (
-			<ThemedText type="small">
-				shake device or press <ThemedText type="code">m</ThemedText> in terminal
-			</ThemedText>
-		)
-	}
-	const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d'
-	return (
-		<ThemedText type="small">
-			press <ThemedText type="code">{shortcut}</ThemedText>
-		</ThemedText>
-	)
+function match(input: string, regex: RegExp): [boolean, string?] {
+	const found = [...input.matchAll(regex)].map((i) => i[1])
+	const exists = found.length === 1
+	return [exists, found[0]]
 }
 
-export default function HomeScreen() {
-	return (
-		<ThemedView style={styles.container}>
-			<SafeAreaView style={styles.safeArea}>
-				<ThemedView style={styles.heroSection}>
-					<AnimatedIcon />
-					<ThemedText type="title" style={styles.title}>
-						Welcome to&nbsp;Expo
-					</ThemedText>
-				</ThemedView>
+function matchTrio(input: string): [boolean, [string?, string?, string?]] {
+	const fat = /\b(\d+(?:\.\d+)?)f\b/g
+	const carb = /\b(\d+(?:\.\d+)?)c\b/g
+	const protein = /\b(\d+(?:\.\d+)?)p\b/g
 
-				<Button theme="blue">Hello world</Button>
-
-				<ThemedText type="code" style={styles.code}>
-					get started
-				</ThemedText>
-
-				<ThemedView type="backgroundElement" style={styles.stepContainer}>
-					<HintRow title="Try editing" hint={<ThemedText type="code">src/app/index.tsx</ThemedText>} />
-					<HintRow title="Dev tools" hint={getDevMenuHint()} />
-					<HintRow title="Fresh start" hint={<ThemedText type="code">npm run reset-project</ThemedText>} />
-				</ThemedView>
-
-				{Platform.OS === 'web' && <WebBadge />}
-			</SafeAreaView>
-		</ThemedView>
-	)
+	const regs = [fat, carb, protein].map((r) => match(input, r))
+	const hasOne = regs.map((t) => t[0]).reduce((acc, val) => acc || val, false)
+	const regValues = regs.map((t) => t[1]) as [string?, string?, string?]
+	return [hasOne, regValues]
 }
 
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		justifyContent: 'center',
-		flexDirection: 'row',
-	},
-	safeArea: {
-		flex: 1,
-		paddingHorizontal: Spacing.four,
-		alignItems: 'center',
-		gap: Spacing.three,
-		paddingBottom: BottomTabInset + Spacing.three,
-		maxWidth: MaxContentWidth,
-	},
-	heroSection: {
-		alignItems: 'center',
-		justifyContent: 'center',
-		flex: 1,
-		paddingHorizontal: Spacing.four,
-		gap: Spacing.four,
-	},
-	title: {
-		textAlign: 'center',
-	},
-	code: {
-		textTransform: 'uppercase',
-	},
-	stepContainer: {
-		gap: Spacing.three,
-		alignSelf: 'stretch',
-		paddingHorizontal: Spacing.three,
-		paddingVertical: Spacing.four,
-		borderRadius: Spacing.four,
-	},
-})
+export default function () {
+	const [items, setItems] = useState(['icon'])
+	const [inputContent, setInputContent] = useState('')
+	const [hasError, setError] = useState(false)
+
+	const handleEnter = () => {
+		const word = /\b(?!\d)\w+\b/g
+		const weight = /\b(\d+(?:\.\d+)?)g\b/g
+		const calorie = /\b(\d+(?:\.\d+)?)cal\b/g
+
+		const anySuffix = /\b\d+(?:\.\d+)?(?!(?:g|f|c|p|cal)\b)[a-zA-Z]*\b/g
+
+		const [hasTrio, trioValues] = matchTrio(inputContent)
+		const [_, wordValue] = match(inputContent, word)
+		const [hasWeight, weightValue] = match(inputContent, weight)
+		const [hasCalorie, calorieValue] = match(inputContent, calorie)
+		const [hasSuffix] = match(inputContent, anySuffix)
+
+		const trioXORcalorie = hasCalorie !== hasTrio
+		const isValid = hasWeight && !hasSuffix && trioXORcalorie
+	}
+
+	return (
+		<YStack height={'100%'}>
+			<YStack grow={1} m="$2" mt="$5">
+				{items.map((i) => (
+					<Card key={i} bg="pink">
+						<Text>i</Text>
+					</Card>
+				))}
+			</YStack>
+
+			<XStack gap={'$2'} m="$2">
+				<TextArea grow={1} height={30 * 3} placeholder="Enter your details..." value={inputContent} onChangeText={setInputContent} />
+				<Button theme="blue_accent" onPress={handleEnter} height={'100%'} icon={CornerDownLeft}></Button>
+			</XStack>
+		</YStack>
+	)
+}
