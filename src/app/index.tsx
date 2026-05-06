@@ -2,6 +2,7 @@ import { useStore } from '@/store'
 import { CornerDownLeft } from '@tamagui/lucide-icons-2'
 import { useMemo } from 'react'
 import { Button, Card, Text, TextArea, XStack, YStack } from 'tamagui'
+import { useDebounce } from 'use-debounce'
 
 function match(input: string, regex: RegExp, acceptMany: boolean = false): string | undefined {
 	const found = [...input.matchAll(regex)].map((i) => i[1])
@@ -20,13 +21,14 @@ const other = /\b(\d+(?:\.\d+)?(?!(?:g|f|c|p|cal)\b))[a-zA-Z]*\b/g
 const allRegexes: Record<string, RegExp> = { word, weight, calorie, fat, carb, protein }
 
 export default function HomeScreen() {
-	const { mainInput, setMainInput, setDebouncedInput } = useStore((state) => state)
+	const { mainInput, setMainInput } = useStore((state) => state)
+	const [debouncedInput] = useDebounce(mainInput, 500)
 
 	const matches = useMemo(() => {
-		const entries = Object.keys(allRegexes).map((k) => [k, match(mainInput, allRegexes[k])])
-		entries.push(['other', match(mainInput, other, true)])
+		const entries = Object.keys(allRegexes).map((k) => [k, match(debouncedInput, allRegexes[k])])
+		entries.push(['other', match(debouncedInput, other, true)])
 		return Object.fromEntries(entries)
-	}, [mainInput])
+	}, [debouncedInput])
 
 	const hasTrio = !!matches.fat || !!matches.carb || !!matches.protein
 	const hasCaloricValue = !!matches.calorie !== hasTrio
@@ -51,13 +53,7 @@ export default function HomeScreen() {
 					value={mainInput}
 					onChangeText={setMainInput}
 				/>
-				<Button
-					disabled={!isValid}
-					theme={isValid ? 'blue_accent' : 'gray'}
-					onPress={() => console.log('>eee>>')}
-					height={'100%'}
-					icon={CornerDownLeft}
-				></Button>
+				<Button disabled={!isValid} theme={isValid ? 'blue_accent' : 'gray'} onPress={() => {}} height={'100%'} icon={CornerDownLeft}></Button>
 			</XStack>
 		</YStack>
 	)
