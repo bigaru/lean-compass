@@ -52,6 +52,7 @@ interface State {
 	mainInput: string
 	matches: Record<string, any>
 	isInputValid: boolean
+	isMatchesValid: boolean
 	foods: Food[]
 	setMainInput: (text: string) => void
 	addFood: () => void
@@ -60,7 +61,8 @@ interface State {
 const useStore = create<State>((set) => {
 	const debounceInput = debounce((input: string) => {
 		const matches = computeMatches(input)
-		set((state) => ({ ...state, matches, isInputValid: !state.mainInput.trim() || validateMatches(matches) }))
+		const validation = validateMatches(matches)
+		set((state) => ({ ...state, matches, isInputValid: !state.mainInput.trim() || validation, isMatchesValid: validation }))
 	}, 500)
 
 	return {
@@ -68,6 +70,7 @@ const useStore = create<State>((set) => {
 		matches: {},
 		foods: [],
 		isInputValid: true,
+		isMatchesValid: false,
 		setMainInput: (text) =>
 			set((state) => {
 				debounceInput(text)
