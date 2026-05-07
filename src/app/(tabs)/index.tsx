@@ -1,9 +1,11 @@
 import { useStore } from '@/store'
 import { ChevronLeft, ChevronRight, CornerDownLeft } from '@tamagui/lucide-icons-2'
 import { Stack } from 'expo-router'
-import PagerView from 'react-native-pager-view'
+import { useRef } from 'react'
+import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler'
+import InfinitePager, { InfinitePagerImperativeApi } from 'react-native-infinite-pager'
 
-import { Button, Card, ScrollView, SizableText, TextArea, XStack, YStack } from 'tamagui'
+import { Button, Card, SizableText, TextArea, XStack, YStack } from 'tamagui'
 
 const formatOpt: Intl.DateTimeFormatOptions = { weekday: 'short', day: '2-digit', month: 'short' }
 const LINE_HEIGHT = 30
@@ -11,6 +13,7 @@ const LINE_HEIGHT = 30
 export default function HomeScreen() {
 	const { mainInput, setMainInput, isInputValid, isMatchesValid, addFood } = useStore((state) => state)
 	const totalCount = useStore((state) => state.foods.reduce((acc, item) => acc + item.totalCalories, 0))
+	const pagerRef = useRef<InfinitePagerImperativeApi>(null)
 
 	return (
 		<>
@@ -27,15 +30,30 @@ export default function HomeScreen() {
 			/>
 			<YStack height={'100%'} bg="$gray5">
 				<XStack justify="space-between" items="center" my="$2">
-					<Button circular chromeless size="$3" icon={ChevronLeft} />
+					<Button
+						circular
+						chromeless
+						size="$3"
+						icon={ChevronLeft}
+						onPress={() => {
+							pagerRef.current?.decrementPage({ animated: true })
+						}}
+					/>
 					<SizableText>{new Date().toLocaleDateString('de-CH', formatOpt)}</SizableText>
-					<Button circular chromeless size="$3" icon={ChevronRight} />
+					<Button
+						circular
+						chromeless
+						size="$3"
+						icon={ChevronRight}
+						onPress={() => {
+							pagerRef.current?.incrementPage({ animated: true })
+						}}
+					/>
 				</XStack>
 				<YStack grow={1}>
-					<PagerView initialPage={0} style={{ flex: 1 }}>
-						<FoodList key={2} />
-						<FoodList key={1} />
-					</PagerView>
+					<GestureHandlerRootView style={{ flex: 1 }}>
+						<InfinitePager ref={pagerRef} PageComponent={FoodList} style={{ flex: 1 }} />
+					</GestureHandlerRootView>
 				</YStack>
 
 				<XStack gap={'$2'} p="$2" py="$3" bg="$black6">
@@ -55,11 +73,11 @@ export default function HomeScreen() {
 	)
 }
 
-function FoodList() {
+function FoodList({ index }: { index: number }) {
 	const { foods } = useStore((state) => state)
 
 	return (
-		<ScrollView height="100%">
+		<ScrollView style={{ height: '100%' }}>
 			<YStack m="$2" mt="$0" mb="$4" gap="$2.5">
 				{foods.map((item, idx) => (
 					<Card key={idx} bg="white" px="$3" py="$3">
