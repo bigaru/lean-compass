@@ -7,7 +7,7 @@ const pastMillis = addDaysToDate(-1).valueOf()
 
 let db: SQLite.SQLiteDatabase | null = null
 
-export async function initDB() {
+export async function init() {
 	db = await SQLite.openDatabaseAsync('leancompass.db')
 
 	await db.execAsync(`
@@ -45,6 +45,14 @@ INSERT INTO foods (name, createdAt, cal, fat, carb, protein, weight) VALUES
 `)
 }
 
-export async function loadFoods(date: Date) {
+export async function loadAllByDate(date: Date) {
 	return db!.getAllAsync<Food>(`SELECT * FROM foods WHERE createdAt=${date.valueOf()};`)
+}
+
+export async function add(food: Food) {
+	const { name, createdAt, cal, fat, carb, protein, weight } = food
+	const result = await db!.runAsync(
+		`INSERT INTO foods (name, createdAt, cal, fat, carb, protein, weight) VALUES ('${name}',${createdAt},${cal},${fat},${carb},${protein},${weight});`
+	)
+	return result.lastInsertRowId
 }

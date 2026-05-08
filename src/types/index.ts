@@ -1,7 +1,9 @@
 export interface Food {
+	id: number
 	name: string
+	createdAt: number
 	weight: number
-	calories: number
+	cal: number
 	fat: number
 	carb: number
 	protein: number

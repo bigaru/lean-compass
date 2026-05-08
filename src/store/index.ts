@@ -1,4 +1,4 @@
-import { initDB, loadFoods } from '@/db'
+import * as DB from '@/db'
 import { Food, FoodWithTotal } from '@/types'
 import { addDaysToDate, addTotalCal } from '@/utils'
 import debounce from 'lodash.debounce'
@@ -17,7 +17,7 @@ interface State {
 	selectPage: (n: number) => void
 }
 
-const useStore = create<State>((set) => {
+const useStore = create<State>((set, get) => {
 	const debounceInput = debounce((input: string) => {
 		const matches = computeMatches(input)
 		const validation = validateMatches(matches)
@@ -26,8 +26,8 @@ const useStore = create<State>((set) => {
 
 	const currentDate = addDaysToDate(0)
 
-	initDB().then(async () => {
-		const foodList = await loadFoods(currentDate)
+	DB.init().then(async () => {
+		const foodList = await DB.loadAllByDate(currentDate)
 		set((state) => ({ ...state, foods: foodList.map(addTotalCal) }))
 	})
 
@@ -43,25 +43,28 @@ const useStore = create<State>((set) => {
 				debounceInput(text)
 				return { ...state, mainInput: text }
 			}),
-		addFood: () =>
-			set((state) => {
-				const { other, ...rest } = state.matches
-				const newFood = {
-					...rest,
-					name: rest.word ?? '',
-					fat: rest.fat ?? 0,
-					carb: rest.carb ?? 0,
-					protein: rest.protein ?? 0,
-					calories: rest.calories ?? 0,
-				} as Food
+		addFood: async () => {
+			const { other, ...rest } = get().matches
+			const newFood = {
+				...rest,
+				id: 0,
+				name: rest.word ?? '',
+				createdAt: get().currentDate.valueOf(),
+				fat: rest.fat ?? 0,
+				carb: rest.carb ?? 0,
+				protein: rest.protein ?? 0,
+				cal: rest.calories ?? 0,
+			} as Food
 
-				return { ...state, mainInput: '', foods: [...state.foods, addTotalCal(newFood)] }
-			}),
+			const lastInsertId = await DB.add(newFood)
+			newFood.id = lastInsertId
+			set((state) => ({ ...state, mainInput: '', foods: [...state.foods, addTotalCal(newFood)] }))
+		},
 		selectPage: async (n) => {
 			const newDate = addDaysToDate(n)
 			set((state) => ({ ...state, currentDate: newDate }))
 
-			const foodList = await loadFoods(newDate)
+			const foodList = await DB.loadAllByDate(newDate)
 			set((state) => ({ ...state, foods: foodList.map(addTotalCal) }))
 		},
 	}
