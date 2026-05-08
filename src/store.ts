@@ -54,8 +54,10 @@ interface State {
 	isInputValid: boolean
 	isMatchesValid: boolean
 	foods: Food[]
+	currentDate: Date
 	setMainInput: (text: string) => void
 	addFood: () => void
+	selectPage: (n: number) => void
 }
 
 const useStore = create<State>((set) => {
@@ -65,12 +67,16 @@ const useStore = create<State>((set) => {
 		set((state) => ({ ...state, matches, isInputValid: !state.mainInput.trim() || validation, isMatchesValid: validation }))
 	}, 500)
 
+	const currentDate = new Date()
+	currentDate.setHours(0, 0, 0, 0)
+
 	return {
 		mainInput: '',
 		matches: {},
 		foods: [],
 		isInputValid: true,
 		isMatchesValid: false,
+		currentDate,
 		setMainInput: (text) =>
 			set((state) => {
 				debounceInput(text)
@@ -97,6 +103,13 @@ const useStore = create<State>((set) => {
 				} as Food
 
 				return { ...state, mainInput: '', foods: [...state.foods, newFood] }
+			}),
+		selectPage: (n) =>
+			set((state) => {
+				const d = new Date()
+				d.setHours(0, 0, 0, 0)
+				d.setDate(d.getDate() + n)
+				return { ...state, currentDate: d }
 			}),
 	}
 })

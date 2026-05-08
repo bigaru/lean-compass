@@ -4,30 +4,23 @@ import { Stack } from 'expo-router'
 import { useRef } from 'react'
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler'
 import InfinitePager, { InfinitePagerImperativeApi } from 'react-native-infinite-pager'
-
 import { Button, Card, SizableText, TextArea, XStack, YStack } from 'tamagui'
 
-const formatOpt: Intl.DateTimeFormatOptions = { weekday: 'short', day: '2-digit', month: 'short' }
 const LINE_HEIGHT = 30
 
+function formatDate(d: Date) {
+	return d.toLocaleDateString('de-CH', { weekday: 'short', day: '2-digit', month: 'short' })
+}
+
 export default function HomeScreen() {
-	const { mainInput, setMainInput, isInputValid, isMatchesValid, addFood } = useStore((state) => state)
+	const { mainInput, setMainInput, isInputValid, isMatchesValid, addFood, selectPage } = useStore((state) => state)
+	const localeDate = useStore((state) => formatDate(state.currentDate))
 	const totalCount = useStore((state) => state.foods.reduce((acc, item) => acc + item.totalCalories, 0))
 	const pagerRef = useRef<InfinitePagerImperativeApi>(null)
 
 	return (
 		<>
-			<Stack.Screen
-				options={{
-					title: 'Today',
-					headerShown: true,
-					headerRight: () => (
-						<SizableText pr="$4" size="$6" fontWeight={'bold'}>
-							{totalCount} cal
-						</SizableText>
-					),
-				}}
-			/>
+			<Stack.Screen />
 			<YStack height={'100%'} bg="$gray5">
 				<XStack justify="space-between" items="center" my="$2">
 					<Button
@@ -39,7 +32,7 @@ export default function HomeScreen() {
 							pagerRef.current?.decrementPage({ animated: true })
 						}}
 					/>
-					<SizableText>{new Date().toLocaleDateString('de-CH', formatOpt)}</SizableText>
+					<SizableText>{localeDate}</SizableText>
 					<Button
 						circular
 						chromeless
@@ -52,7 +45,7 @@ export default function HomeScreen() {
 				</XStack>
 				<YStack grow={1}>
 					<GestureHandlerRootView style={{ flex: 1 }}>
-						<InfinitePager ref={pagerRef} PageComponent={FoodList} style={{ flex: 1 }} />
+						<InfinitePager ref={pagerRef} PageComponent={FoodList} style={{ flex: 1 }} onPageChange={selectPage} />
 					</GestureHandlerRootView>
 				</YStack>
 
