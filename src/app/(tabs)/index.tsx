@@ -1,10 +1,10 @@
 import { useStore } from '@/store'
-import { ChevronLeft, ChevronRight, CornerDownLeft } from '@tamagui/lucide-icons-2'
+import { ChevronLeft, ChevronRight, CornerDownLeft, Utensils } from '@tamagui/lucide-icons-2'
 import { Stack } from 'expo-router'
 import { useRef } from 'react'
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler'
 import InfinitePager, { InfinitePagerImperativeApi } from 'react-native-infinite-pager'
-import { Button, Card, SizableText, TextArea, XStack, YStack } from 'tamagui'
+import { Button, Card, SizableText, TextArea, View, XStack, YStack } from 'tamagui'
 
 const LINE_HEIGHT = 30
 
@@ -65,8 +65,12 @@ export default function HomeScreen() {
 	)
 }
 
-function FoodList({ index }: { index: number }) {
+function FoodList() {
 	const foods = useStore((state) => state.foods)
+
+	if (foods.length === 0) {
+		return <EmptyState />
+	}
 
 	return (
 		<ScrollView style={{ height: '100%' }}>
@@ -93,5 +97,37 @@ function FoodList({ index }: { index: number }) {
 				))}
 			</YStack>
 		</ScrollView>
+	)
+}
+
+function EmptyState() {
+	return (
+		<YStack justify="center" items="center" height="100%">
+			<View grow={1} />
+			<Utensils mt="$-10" size="$10" strokeWidth={0.75} />
+			<SizableText mb="$4" size="$8" fontWeight={'bold'}>
+				I am starving!
+			</SizableText>
+			<YStack>
+				<SizableText size="$4">For example, try entering:</SizableText>
+
+				<SizableText
+					bg="white"
+					px="$4"
+					py="$2"
+					size="$6"
+					borderTopRightRadius="$2"
+					borderBottomRightRadius="$2"
+					borderTopLeftRadius="$2"
+					borderBottomLeftRadius="$2"
+				>
+					SuperFood 100g 2f 3c 4p
+				</SizableText>
+				<SizableText size="$4" mt="$1">
+					where f = fat, c = carbs and p = protein in grams.
+				</SizableText>
+			</YStack>
+			<View grow={2} />
+		</YStack>
 	)
 }
