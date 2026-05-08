@@ -15,7 +15,6 @@ function formatDate(d: Date) {
 export default function HomeScreen() {
 	const { mainInput, setMainInput, isInputValid, isMatchesValid, addFood, selectPage } = useStore((state) => state)
 	const localeDate = useStore((state) => formatDate(state.currentDate))
-	const totalCount = useStore((state) => state.foods.reduce((acc, item) => acc + item.totalCalories, 0))
 	const pagerRef = useRef<InfinitePagerImperativeApi>(null)
 
 	return (
@@ -67,7 +66,7 @@ export default function HomeScreen() {
 }
 
 function FoodList({ index }: { index: number }) {
-	const { foods } = useStore((state) => state)
+	const foods = useStore((state) => state.foods)
 
 	return (
 		<ScrollView style={{ height: '100%' }}>

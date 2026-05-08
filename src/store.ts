@@ -1,15 +1,7 @@
+import { Food, FoodWithTotal } from '@/types'
 import debounce from 'lodash.debounce'
 import { create } from 'zustand'
-
-interface Food {
-	name: string
-	weight: number
-	calories: number
-	fat: number
-	carb: number
-	protein: number
-	totalCalories: number
-}
+import { loadFoods } from './db'
 
 //per gram
 const CAL_OF_FAT = 9
@@ -48,12 +40,20 @@ function validateMatches(matches: Record<string, any>) {
 	return matches.weight != null && hasCaloricValue && !matches.other
 }
 
+function addTotalCal(food: Food): FoodWithTotal {
+	const calPer100 = food.calories ? food.calories : CAL_OF_FAT * food.fat + CAL_OF_CARB * food.carb + CAL_OF_PROTEIN * food.protein
+	return {
+		...food,
+		totalCalories: calPer100 * (food.weight / 100),
+	}
+}
+
 interface State {
 	mainInput: string
 	matches: Record<string, any>
 	isInputValid: boolean
 	isMatchesValid: boolean
-	foods: Food[]
+	foods: FoodWithTotal[]
 	currentDate: Date
 	setMainInput: (text: string) => void
 	addFood: () => void
@@ -70,6 +70,8 @@ const useStore = create<State>((set) => {
 	const currentDate = new Date()
 	currentDate.setHours(0, 0, 0, 0)
 
+	loadFoods(currentDate).then((loaded) => set((state) => ({ ...state, foods: loaded.map(addTotalCal) })))
+
 	return {
 		mainInput: '',
 		matches: {},
@@ -85,24 +87,16 @@ const useStore = create<State>((set) => {
 		addFood: () =>
 			set((state) => {
 				const { other, ...rest } = state.matches
-
-				const fat = rest.fat ?? 0
-				const carb = rest.carb ?? 0
-				const protein = rest.protein ?? 0
-
-				const calPer100 = rest.calories ? rest.calories : CAL_OF_FAT * fat + CAL_OF_CARB * carb + CAL_OF_PROTEIN * protein
-
 				const newFood = {
 					...rest,
 					name: rest.word ?? '',
-					fat,
-					carb,
-					protein,
+					fat: rest.fat ?? 0,
+					carb: rest.carb ?? 0,
+					protein: rest.protein ?? 0,
 					calories: rest.calories ?? 0,
-					totalCalories: calPer100 * (rest.weight / 100),
 				} as Food
 
-				return { ...state, mainInput: '', foods: [...state.foods, newFood] }
+				return { ...state, mainInput: '', foods: [...state.foods, addTotalCal(newFood)] }
 			}),
 		selectPage: (n) =>
 			set((state) => {
@@ -114,4 +108,4 @@ const useStore = create<State>((set) => {
 	}
 })
 
-export { useStore }
+export { addTotalCal, useStore }
