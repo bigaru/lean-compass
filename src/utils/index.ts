@@ -9,7 +9,7 @@ export function addTotalCal(food: Food): FoodWithTotal {
 	const calPer100 = food.cal ? food.cal : CAL_OF_FAT * food.fat + CAL_OF_CARB * food.carb + CAL_OF_PROTEIN * food.protein
 	return {
 		...food,
-		totalCalories: calPer100 * (food.weight / 100),
+		totalCalories: Math.round(calPer100 * (food.weight / 100)),
 	}
 }
 
