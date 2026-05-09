@@ -5,7 +5,7 @@ export default function TabLayout() {
 	return (
 		<Tabs>
 			<Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: ({ color }) => <MaterialIcons color={color} size={28} name="home" /> }} />
-			<Tabs.Screen name="explore" options={{ tabBarIcon: ({ color }) => <MaterialIcons color={color} size={28} name="groups" /> }} />
+			<Tabs.Screen name="stats" options={{ title: 'Stats', tabBarIcon: ({ color }) => <MaterialIcons color={color} size={28} name="bar-chart" /> }} />
 		</Tabs>
 	)
 }
