@@ -1,5 +1,5 @@
-import { Food } from '@/types'
-import { addDaysToDate } from '@/utils'
+import { CalDay, Food } from '@/types'
+import { addDaysToDate, CAL_OF_CARB, CAL_OF_FAT, CAL_OF_PROTEIN } from '@/utils'
 import * as SQLite from 'expo-sqlite'
 
 const currentMillis = addDaysToDate(0).valueOf()
@@ -63,4 +63,28 @@ export async function add(food: Food) {
 		`INSERT INTO foods (name, createdAt, cal, fat, carb, protein, weight) VALUES ('${name}',${createdAt},${cal},${fat},${carb},${protein},${weight});`
 	)
 	return result.lastInsertRowId
+}
+
+export async function getLastSeven(page: number) {
+	const upperBound = addDaysToDate(page * 7 + 1)
+	const lowerBound = addDaysToDate(page * 7 - 6)
+	const sql = `
+SELECT
+	createdAt,
+	SUM ((${CAL_OF_FAT} * fat) * (weight / 100)) as fat,
+	SUM ((${CAL_OF_CARB} * carb) * (weight / 100)) as carb,
+	SUM ((${CAL_OF_PROTEIN} * protein) * (weight / 100)) as protein,
+	SUM (
+	  CASE
+      	WHEN cal != 0 THEN cal * (weight / 100)
+      	ELSE (${CAL_OF_FAT} * fat + ${CAL_OF_CARB} * carb + ${CAL_OF_PROTEIN} * protein) * (weight / 100)
+	  END
+	) as cal
+FROM foods
+WHERE ${lowerBound.valueOf()} <= createdAt
+  AND createdAt < ${upperBound.valueOf()}
+GROUP BY createdAt
+ORDER BY createdAt ASC;
+`
+	return db!.getAllAsync<CalDay>(sql)
 }
