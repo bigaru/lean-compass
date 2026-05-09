@@ -1,6 +1,6 @@
 import { useStore } from '@/store'
 import { addDaysToDate } from '@/utils'
-import { ChevronLeft, ChevronRight, CornerDownLeft, Utensils } from '@tamagui/lucide-icons-2'
+import { ChevronLeft, ChevronRight, Coffee, CornerDownLeft } from '@tamagui/lucide-icons-2'
 import * as Localization from 'expo-localization'
 import { Stack } from 'expo-router'
 import { useEffect, useRef } from 'react'
@@ -113,10 +113,12 @@ function EmptyState() {
 	return (
 		<YStack justify="center" items="center" height="100%">
 			<View grow={1} />
-			<Utensils mt="$-10" size="$10" strokeWidth={0.75} />
-			<SizableText mb="$4" size="$8" fontWeight={'bold'}>
-				I am starving!
-			</SizableText>
+			<XStack gap="$2">
+				<SizableText mb="$4" size="$8" fontWeight={'bold'}>
+					Fasting Mode
+				</SizableText>
+				<Coffee size="$3" />
+			</XStack>
 			<YStack>
 				<SizableText size="$4">For example, try entering:</SizableText>
 
