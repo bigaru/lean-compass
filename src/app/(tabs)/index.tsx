@@ -6,7 +6,7 @@ import { Stack } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler'
 import InfinitePager, { InfinitePagerImperativeApi, InfinitePagerPageProps } from 'react-native-infinite-pager'
-import { Button, Card, SizableText, TextArea, View, XStack, YStack } from 'tamagui'
+import { Button, Card, Sheet, SizableText, TextArea, View, XStack, YStack } from 'tamagui'
 
 const LINE_HEIGHT = 30
 
@@ -16,7 +16,7 @@ function formatDate(d: Date) {
 }
 
 export default function HomeScreen() {
-	const { mainInput, setMainInput, isInputValid, isMatchesValid, addFood, selectPage } = useStore((state) => state)
+	const { mainInput, setMainInput, isInputValid, isMatchesValid, addFood, selectPage, selectedFood, openSheet, deleteFood } = useStore((state) => state)
 	const localeDate = useStore((state) => formatDate(state.currentDate))
 	const pagerRef = useRef<InfinitePagerImperativeApi>(null)
 
@@ -63,6 +63,15 @@ export default function HomeScreen() {
 					/>
 					<Button disabled={!isMatchesValid} theme={isMatchesValid ? 'blue_accent' : 'gray'} onPress={addFood} height={'100%'} icon={CornerDownLeft}></Button>
 				</XStack>
+				<Sheet open={!!selectedFood} snapPoints={[25]} snapPointsMode="percent" dismissOnSnapToBottom onOpenChange={() => openSheet(null)}>
+					<Sheet.Overlay bg="$shadow6" transition="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
+					<Sheet.Handle />
+					<Sheet.Frame justify="center" p="$3">
+						<Button theme="red_accent" onPress={deleteFood}>
+							Delete
+						</Button>
+					</Sheet.Frame>
+				</Sheet>
 			</YStack>
 		</>
 	)
@@ -72,6 +81,7 @@ function FoodList({ index }: InfinitePagerPageProps) {
 	const pageDate = addDaysToDate(index).valueOf()
 	const data = useStore((state) => state.pageRecord[pageDate]) ?? []
 	const loadPage = useStore((state) => state.loadPage)
+	const openSheet = useStore((state) => state.openSheet)
 
 	useEffect(() => {
 		loadPage(pageDate)
@@ -85,7 +95,7 @@ function FoodList({ index }: InfinitePagerPageProps) {
 		<ScrollView style={{ height: '100%' }}>
 			<YStack m="$2" mt="$0" mb="$4" gap="$2.5">
 				{data.map((item) => (
-					<Card key={item.id} bg="white" px="$3" py="$3">
+					<Card key={item.id} bg="white" px="$3" py="$3" onLongPress={() => openSheet(item.id)}>
 						<YStack>
 							<XStack justify="space-between">
 								<SizableText size="$6">{item.name}</SizableText>

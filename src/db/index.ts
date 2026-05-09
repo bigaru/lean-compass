@@ -53,6 +53,10 @@ export async function loadAllByDate(dateVal: number) {
 	return db!.getAllAsync<Food>(`SELECT * FROM foods WHERE createdAt=${dateVal};`)
 }
 
+export async function remove(foodId: number) {
+	return db!.runAsync(`DELETE FROM foods WHERE id=${foodId};`)
+}
+
 export async function add(food: Food) {
 	const { name, createdAt, cal, fat, carb, protein, weight } = food
 	const result = await db!.runAsync(

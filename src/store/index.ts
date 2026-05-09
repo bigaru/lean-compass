@@ -12,10 +12,13 @@ interface State {
 	isMatchesValid: boolean
 	pageRecord: Record<number, FoodWithTotal[]>
 	currentDate: Date
+	selectedFood: number | null
 	setMainInput: (text: string) => void
-	addFood: () => void
 	selectPage: (n: number) => void
+	addFood: () => void
+	deleteFood: () => void
 	loadPage: (n: number) => void
+	openSheet: (id: number | null) => void
 }
 
 const useStore = create<State>((set, get) => {
@@ -35,7 +38,7 @@ const useStore = create<State>((set, get) => {
 	}
 
 	const currentDate = addDaysToDate(0)
-	DB.init().then(() => loadPage(0))
+	DB.init()
 
 	return {
 		mainInput: '',
@@ -44,11 +47,13 @@ const useStore = create<State>((set, get) => {
 		isInputValid: true,
 		isMatchesValid: false,
 		currentDate,
+		selectedFood: null,
 		setMainInput: (text) =>
 			set((state) => {
 				debounceInput(text)
 				return { ...state, mainInput: text }
 			}),
+		loadPage,
 		addFood: async () => {
 			const { other, ...rest } = get().matches
 			const createdAt = get().currentDate.valueOf()
@@ -68,6 +73,14 @@ const useStore = create<State>((set, get) => {
 			set((state) => ({ ...state, mainInput: '', isMatchesValid: false }))
 			loadPage(createdAt)
 		},
+		deleteFood: async () => {
+			const id = get().selectedFood
+			if (id) {
+				await DB!.remove(id)
+				loadPage(get().currentDate.valueOf())
+				set((state) => ({ ...state, selectedFood: null }))
+			}
+		},
 		selectPage: async (n) => {
 			const pageDate = addDaysToDate(n)
 
@@ -75,7 +88,7 @@ const useStore = create<State>((set, get) => {
 				return { ...state, currentDate: pageDate }
 			})
 		},
-		loadPage,
+		openSheet: (id: number | null) => set((state) => ({ ...state, selectedFood: id })),
 	}
 })
 
