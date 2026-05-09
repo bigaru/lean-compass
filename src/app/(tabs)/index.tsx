@@ -1,5 +1,6 @@
 import { useStore } from '@/store'
 import { ChevronLeft, ChevronRight, CornerDownLeft, Utensils } from '@tamagui/lucide-icons-2'
+import * as Localization from 'expo-localization'
 import { Stack } from 'expo-router'
 import { useRef } from 'react'
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler'
@@ -9,7 +10,8 @@ import { Button, Card, SizableText, TextArea, View, XStack, YStack } from 'tamag
 const LINE_HEIGHT = 30
 
 function formatDate(d: Date) {
-	return d.toLocaleDateString('de-CH', { weekday: 'short', day: '2-digit', month: 'short' })
+	const locale = Localization.getLocales()[0]
+	return d.toLocaleDateString(locale.languageTag, { weekday: 'short', day: '2-digit', month: 'short' })
 }
 
 export default function HomeScreen() {
