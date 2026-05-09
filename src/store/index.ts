@@ -10,11 +10,12 @@ interface State {
 	matches: Record<string, any>
 	isInputValid: boolean
 	isMatchesValid: boolean
-	foods: FoodWithTotal[]
+	pageRecord: Record<number, FoodWithTotal[]>
 	currentDate: Date
 	setMainInput: (text: string) => void
 	addFood: () => void
 	selectPage: (n: number) => void
+	loadPage: (n: number) => void
 }
 
 const useStore = create<State>((set, get) => {
@@ -24,17 +25,22 @@ const useStore = create<State>((set, get) => {
 		set((state) => ({ ...state, matches, isInputValid: !state.mainInput.trim() || validation, isMatchesValid: validation }))
 	}, 500)
 
-	const currentDate = addDaysToDate(0)
+	const loadPage = async (pageDateVal: number) => {
+		const foodList = await DB.loadAllByDate(pageDateVal)
 
-	DB.init().then(async () => {
-		const foodList = await DB.loadAllByDate(currentDate)
-		set((state) => ({ ...state, foods: foodList.map(addTotalCal) }))
-	})
+		set((state) => {
+			const newPageRecord = { ...state.pageRecord, [pageDateVal]: foodList.map(addTotalCal) }
+			return { ...state, pageRecord: newPageRecord }
+		})
+	}
+
+	const currentDate = addDaysToDate(0)
+	DB.init().then(() => loadPage(0))
 
 	return {
 		mainInput: '',
 		matches: {},
-		foods: [],
+		pageRecord: {},
 		isInputValid: true,
 		isMatchesValid: false,
 		currentDate,
@@ -45,28 +51,31 @@ const useStore = create<State>((set, get) => {
 			}),
 		addFood: async () => {
 			const { other, ...rest } = get().matches
+			const createdAt = get().currentDate.valueOf()
+
 			const newFood = {
 				...rest,
 				id: 0,
 				name: rest.word ?? '',
-				createdAt: get().currentDate.valueOf(),
+				createdAt,
 				fat: rest.fat ?? 0,
 				carb: rest.carb ?? 0,
 				protein: rest.protein ?? 0,
 				cal: rest.calories ?? 0,
 			} as Food
 
-			const lastInsertId = await DB.add(newFood)
-			newFood.id = lastInsertId
-			set((state) => ({ ...state, mainInput: '', foods: [...state.foods, addTotalCal(newFood)] }))
+			await DB.add(newFood)
+			set((state) => ({ ...state, mainInput: '', isMatchesValid: false }))
+			loadPage(createdAt)
 		},
 		selectPage: async (n) => {
-			const newDate = addDaysToDate(n)
-			set((state) => ({ ...state, currentDate: newDate }))
+			const pageDate = addDaysToDate(n)
 
-			const foodList = await DB.loadAllByDate(newDate)
-			set((state) => ({ ...state, foods: foodList.map(addTotalCal) }))
+			set((state) => {
+				return { ...state, currentDate: pageDate }
+			})
 		},
+		loadPage,
 	}
 })
 

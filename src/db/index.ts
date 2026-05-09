@@ -4,6 +4,7 @@ import * as SQLite from 'expo-sqlite'
 
 const currentMillis = addDaysToDate(0).valueOf()
 const pastMillis = addDaysToDate(-1).valueOf()
+const oldMillis = addDaysToDate(-2).valueOf()
 
 let db: SQLite.SQLiteDatabase | null = null
 
@@ -37,7 +38,10 @@ INSERT INTO foods (name, createdAt, cal, fat, carb, protein, weight) VALUES
 	('Sausage', ${currentMillis}, 0, 23, 0, 13, 200 ),
 	('past-Mango', ${pastMillis}, 0, 0, 13, 0, 100 ),
 	('past-Potato', ${pastMillis}, 0, 0, 16, 2, 2000 ),
-	('past-Sausage', ${pastMillis}, 0, 23, 0, 13, 200 )
+	('past-Sausage', ${pastMillis}, 0, 23, 0, 13, 200 ),
+	('old-Mango', ${oldMillis}, 0, 0, 13, 0, 100 ),
+	('old-Potato', ${oldMillis}, 0, 0, 16, 2, 2000 ),
+	('old-Sausage', ${oldMillis}, 0, 23, 0, 13, 200 )
 
 	;
 
@@ -45,8 +49,8 @@ INSERT INTO foods (name, createdAt, cal, fat, carb, protein, weight) VALUES
 `)
 }
 
-export async function loadAllByDate(date: Date) {
-	return db!.getAllAsync<Food>(`SELECT * FROM foods WHERE createdAt=${date.valueOf()};`)
+export async function loadAllByDate(dateVal: number) {
+	return db!.getAllAsync<Food>(`SELECT * FROM foods WHERE createdAt=${dateVal};`)
 }
 
 export async function add(food: Food) {

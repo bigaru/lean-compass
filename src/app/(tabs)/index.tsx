@@ -1,10 +1,11 @@
 import { useStore } from '@/store'
+import { addDaysToDate } from '@/utils'
 import { ChevronLeft, ChevronRight, CornerDownLeft, Utensils } from '@tamagui/lucide-icons-2'
 import * as Localization from 'expo-localization'
 import { Stack } from 'expo-router'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler'
-import InfinitePager, { InfinitePagerImperativeApi } from 'react-native-infinite-pager'
+import InfinitePager, { InfinitePagerImperativeApi, InfinitePagerPageProps } from 'react-native-infinite-pager'
 import { Button, Card, SizableText, TextArea, View, XStack, YStack } from 'tamagui'
 
 const LINE_HEIGHT = 30
@@ -46,7 +47,7 @@ export default function HomeScreen() {
 				</XStack>
 				<YStack grow={1}>
 					<GestureHandlerRootView style={{ flex: 1 }}>
-						<InfinitePager ref={pagerRef} PageComponent={FoodList} style={{ flex: 1 }} onPageChange={selectPage} />
+						<InfinitePager ref={pagerRef} PageComponent={FoodList} pageBuffer={1} style={{ flex: 1 }} onPageChange={selectPage} />
 					</GestureHandlerRootView>
 				</YStack>
 
@@ -67,18 +68,24 @@ export default function HomeScreen() {
 	)
 }
 
-function FoodList() {
-	const foods = useStore((state) => state.foods)
+function FoodList({ index }: InfinitePagerPageProps) {
+	const pageDate = addDaysToDate(index).valueOf()
+	const data = useStore((state) => state.pageRecord[pageDate]) ?? []
+	const loadPage = useStore((state) => state.loadPage)
 
-	if (foods.length === 0) {
+	useEffect(() => {
+		loadPage(pageDate)
+	}, [])
+
+	if (data.length === 0) {
 		return <EmptyState />
 	}
 
 	return (
 		<ScrollView style={{ height: '100%' }}>
 			<YStack m="$2" mt="$0" mb="$4" gap="$2.5">
-				{foods.map((item, idx) => (
-					<Card key={idx} bg="white" px="$3" py="$3">
+				{data.map((item) => (
+					<Card key={item.id} bg="white" px="$3" py="$3">
 						<YStack>
 							<XStack justify="space-between">
 								<SizableText size="$6">{item.name}</SizableText>
