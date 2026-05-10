@@ -77,10 +77,19 @@ const proteinColor = '#F9C22E'
 const range = (start: number, end: number) => Array.from({ length: end - start }, (_, i) => start + i)
 
 function ChartPage({ index }: InfinitePagerPageProps) {
+	const upperBound = addDaysToDate(index * 7 + 1).valueOf()
+	const lowerBound = addDaysToDate(index * 7 - 6).valueOf()
+
 	const { loadLastSeven } = useStore((state) => state)
+	const hasChangedInRange = useStore((state) => {
+		return Object.entries(state.pageRecord)
+			.filter(([key]) => lowerBound <= Number(key) && Number(key) < upperBound)
+			.reduce((acc, [_key, item]) => acc + item.length, 0)
+	})
+
 	useEffect(() => {
 		loadLastSeven(index)
-	}, [])
+	}, [hasChangedInRange])
 
 	const tickValues = range(index * 7 - 6, index * 7 + 1).map((k) => addDaysToDate(k).valueOf())
 	const chartData = useStore((state) => state.chartRecord[index]) ?? []
