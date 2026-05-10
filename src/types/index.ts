@@ -7,9 +7,6 @@ export interface Food {
 	fat: number
 	carb: number
 	protein: number
-}
-
-export interface FoodWithTotal extends Food {
 	totalCalories: number
 }
 

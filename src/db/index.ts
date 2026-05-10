@@ -1,7 +1,12 @@
 import { CalDay, Food } from '@/types'
-import { addDaysToDate, CAL_OF_CARB, CAL_OF_FAT, CAL_OF_PROTEIN } from '@/utils'
+import { addDaysToDate } from '@/utils'
 import * as SQLite from 'expo-sqlite'
 import { insertMockData } from './mock'
+
+//per gram
+const CAL_OF_FAT = 9
+const CAL_OF_CARB = 4
+const CAL_OF_PROTEIN = 4
 
 let db: SQLite.SQLiteDatabase | null = null
 
@@ -28,7 +33,19 @@ CREATE TABLE IF NOT EXISTS foods (
 }
 
 export async function loadAllByDate(dateVal: number) {
-	return db!.getAllAsync<Food>(`SELECT * FROM foods WHERE createdAt=${dateVal};`)
+	const sql = `
+SELECT
+	*,
+	ROUND(
+		CASE
+		WHEN cal != 0 THEN cal * (weight / 100)
+		ELSE (${CAL_OF_FAT} * fat + ${CAL_OF_CARB} * carb + ${CAL_OF_PROTEIN} * protein) * (weight / 100)
+		END
+	) as totalCalories
+FROM foods
+WHERE createdAt=${dateVal};
+`
+	return db!.getAllAsync<Food>(sql)
 }
 
 export async function remove(foodId: number) {

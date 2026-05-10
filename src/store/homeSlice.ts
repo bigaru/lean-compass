@@ -1,6 +1,6 @@
 import * as DB from '@/db'
-import { Food, FoodWithTotal } from '@/types'
-import { addDaysToDate, addTotalCal } from '@/utils'
+import { Food } from '@/types'
+import { addDaysToDate } from '@/utils'
 import debounce from 'lodash.debounce'
 import { StateCreator } from 'zustand'
 import { MainState } from './index'
@@ -11,7 +11,7 @@ export interface HomeState {
 	matches: Record<string, any>
 	isInputValid: boolean
 	isMatchesValid: boolean
-	pageRecord: Record<number, FoodWithTotal[]>
+	pageRecord: Record<number, Food[]>
 	currentDate: Date
 	selectedFood: number | null
 	setMainInput: (text: string) => void
@@ -33,7 +33,7 @@ export const createHomeSlice: StateCreator<MainState, [], [], HomeState> = (set,
 		const foodList = await DB.loadAllByDate(pageDateVal)
 
 		set((state) => {
-			const newPageRecord = { ...state.pageRecord, [pageDateVal]: foodList.map(addTotalCal) }
+			const newPageRecord = { ...state.pageRecord, [pageDateVal]: foodList }
 			return { ...state, pageRecord: newPageRecord }
 		})
 	}
