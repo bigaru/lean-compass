@@ -19,4 +19,6 @@ export interface CalDay {
 	fat: number
 	carb: number
 	protein: number
+
+	[key: string]: number
 }

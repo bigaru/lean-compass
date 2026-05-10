@@ -1,5 +1,5 @@
 import * as DB from '@/db'
-import { Food, FoodWithTotal } from '@/types'
+import { CalDay, Food, FoodWithTotal } from '@/types'
 import { addDaysToDate, addTotalCal } from '@/utils'
 import debounce from 'lodash.debounce'
 import { create } from 'zustand'
@@ -19,6 +19,12 @@ interface State {
 	deleteFood: () => void
 	loadPage: (n: number) => void
 	openSheet: (id: number | null) => void
+
+	//---
+	chartRecord: Record<number, CalDay[]>
+	chartPage: number
+	loadLastSeven: (n: number) => void
+	selectChartPage: (n: number) => void
 }
 
 const useStore = create<State>((set, get) => {
@@ -89,6 +95,14 @@ const useStore = create<State>((set, get) => {
 			})
 		},
 		openSheet: (id: number | null) => set((state) => ({ ...state, selectedFood: id })),
+
+		chartRecord: {},
+		chartPage: 0,
+		loadLastSeven: async (n: number) => {
+			const data = await DB.getLastSeven(n)
+			set((state) => ({ ...state, chartRecord: { ...state.chartRecord, [n]: data } }))
+		},
+		selectChartPage: (n) => set((state) => ({ ...state, chartPage: n })),
 	}
 })
 

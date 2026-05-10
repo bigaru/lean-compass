@@ -1,35 +1,35 @@
 import inter from '@/assets/inter-medium.ttf'
-import { getLastSeven } from '@/db'
 import { useStore } from '@/store'
+import { addDaysToDate } from '@/utils'
 import { Text as SkiaText, useFont } from '@shopify/react-native-skia'
 import { ChevronLeft, ChevronRight } from '@tamagui/lucide-icons-2'
 import * as Localization from 'expo-localization'
 import { Stack } from 'expo-router'
-import { useEffect, useRef, useState } from 'react'
-import { InfinitePagerImperativeApi } from 'react-native-infinite-pager'
+import { useEffect, useRef } from 'react'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import InfinitePager, { InfinitePagerImperativeApi, InfinitePagerPageProps } from 'react-native-infinite-pager'
 import { Button, SizableText, XStack, YStack } from 'tamagui'
-import { Bar, CartesianChart } from 'victory-native'
+import { CartesianChart, StackedBar } from 'victory-native'
 
-function formatDate(d: Date) {
+function formatDateRange(page: number) {
+	const upperBoundInclusive = addDaysToDate(page * 7)
+	const lowerBound = addDaysToDate(page * 7 - 6)
+
 	const locale = Localization.getLocales()[0]
-	return d.toLocaleDateString(locale.languageTag, { weekday: 'short', day: '2-digit', month: 'short' })
+	const l = lowerBound.toLocaleDateString(locale.languageTag, { day: '2-digit', month: 'short' })
+	const u = upperBoundInclusive.toLocaleDateString(locale.languageTag, { day: '2-digit', month: 'short' })
+	return `${l} - ${u}`
 }
-function formatX(ms: number) {
+
+function formatLabelX(ms: number) {
 	const locale = Localization.getLocales()[0]
 	return new Date(ms).toLocaleDateString(locale.languageTag, { weekday: 'short' })
 }
 
 export default function StatsScreen() {
-	const {} = useStore((state) => state)
-	const localeDate = useStore((state) => formatDate(state.currentDate))
+	const { selectChartPage } = useStore((state) => state)
+	const localeDate = useStore((state) => formatDateRange(state.chartPage))
 	const pagerRef = useRef<InfinitePagerImperativeApi>(null)
-
-	const [data, setData] = useState<any[]>([])
-	const font = useFont(inter, 12)
-
-	useEffect(() => {
-		getLastSeven(0).then(setData)
-	})
 
 	return (
 		<>
@@ -56,25 +56,47 @@ export default function StatsScreen() {
 						}}
 					/>
 				</XStack>
-				<YStack grow={1} p="$3">
-					<CartesianChart
-						data={data}
-						padding={{ top: 30 }}
-						yAxis={[{ font: font }]}
-						xAxis={{ font: font, tickValues: data.map((d) => d.createdAt), formatXLabel: (val) => formatX(val) }}
-						xKey="createdAt"
-						yKeys={['cal']}
-						domainPadding={{ left: 40, right: 40 }}
-						renderOutside={({ chartBounds }) => (
-							<>
-								<SkiaText x={0} y={chartBounds.top - 15} font={font} text={'Calories'} />
-							</>
-						)}
-					>
-						{({ points, chartBounds }) => <Bar points={points.cal} chartBounds={chartBounds} color="rgb(55, 55, 116)" />}
-					</CartesianChart>
+				<YStack grow={1}>
+					<GestureHandlerRootView style={{ flex: 1 }}>
+						<InfinitePager ref={pagerRef} PageComponent={ChartPage} pageBuffer={1} style={{ flex: 1 }} onPageChange={selectChartPage} />
+					</GestureHandlerRootView>
 				</YStack>
 			</YStack>
 		</>
+	)
+}
+
+function ChartPage({ index }: InfinitePagerPageProps) {
+	const { loadLastSeven } = useStore((state) => state)
+	useEffect(() => {
+		loadLastSeven(index)
+	}, [])
+
+	const chartData = useStore((state) => state.chartRecord[index]) ?? []
+	const font = useFont(inter, 12)
+	const maxY = Math.floor(Math.max(...chartData.map((d) => d.cal)) * 1.1)
+
+	return (
+		<YStack p="$3" height="100%">
+			<CartesianChart
+				data={chartData}
+				padding={{ top: 30 }}
+				yAxis={[{ font: font }]}
+				xAxis={{ font: font, tickValues: chartData.map((d) => d.createdAt), formatXLabel: (val) => formatLabelX(val) }}
+				xKey="createdAt"
+				yKeys={['fat', 'carb', 'protein']}
+				domainPadding={{ left: 50, right: 50 }}
+				domain={{ y: [0, maxY] }}
+				renderOutside={({ chartBounds }) => (
+					<>
+						<SkiaText x={0} y={chartBounds.top - 15} font={font} text={'Calories'} />
+					</>
+				)}
+			>
+				{({ points, chartBounds }) => (
+					<StackedBar points={[points.fat, points.carb, points.protein]} chartBounds={chartBounds} colors={['#E01A4F', '#F15946', '#F9C22E']} />
+				)}
+			</CartesianChart>
+		</YStack>
 	)
 }
