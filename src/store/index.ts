@@ -1,109 +1,15 @@
 import * as DB from '@/db'
-import { CalDay, Food, FoodWithTotal } from '@/types'
-import { addDaysToDate, addTotalCal } from '@/utils'
-import debounce from 'lodash.debounce'
 import { create } from 'zustand'
-import { computeMatches, validateMatches } from './input'
+import { createHomeSlice, HomeState } from './homeSlice'
+import { createStatsSlice, StatsState } from './statsSlice'
 
-interface State {
-	mainInput: string
-	matches: Record<string, any>
-	isInputValid: boolean
-	isMatchesValid: boolean
-	pageRecord: Record<number, FoodWithTotal[]>
-	currentDate: Date
-	selectedFood: number | null
-	setMainInput: (text: string) => void
-	selectPage: (n: number) => void
-	addFood: () => void
-	deleteFood: () => void
-	loadPage: (n: number) => void
-	openSheet: (id: number | null) => void
+export type MainState = HomeState & StatsState
 
-	//---
-	chartRecord: Record<number, CalDay[]>
-	chartPage: number
-	loadLastSeven: (n: number) => void
-	selectChartPage: (n: number) => void
-}
-
-const useStore = create<State>((set, get) => {
-	const debounceInput = debounce((input: string) => {
-		const matches = computeMatches(input)
-		const validation = validateMatches(matches)
-		set((state) => ({ ...state, matches, isInputValid: !state.mainInput.trim() || validation, isMatchesValid: validation }))
-	}, 500)
-
-	const loadPage = async (pageDateVal: number) => {
-		const foodList = await DB.loadAllByDate(pageDateVal)
-
-		set((state) => {
-			const newPageRecord = { ...state.pageRecord, [pageDateVal]: foodList.map(addTotalCal) }
-			return { ...state, pageRecord: newPageRecord }
-		})
-	}
-
-	const currentDate = addDaysToDate(0)
+export const useStore = create<MainState>()((...args) => {
 	DB.init()
 
 	return {
-		mainInput: '',
-		matches: {},
-		pageRecord: {},
-		isInputValid: true,
-		isMatchesValid: false,
-		currentDate,
-		selectedFood: null,
-		setMainInput: (text) =>
-			set((state) => {
-				debounceInput(text)
-				return { ...state, mainInput: text }
-			}),
-		loadPage,
-		addFood: async () => {
-			const { other, ...rest } = get().matches
-			const createdAt = get().currentDate.valueOf()
-
-			const newFood = {
-				...rest,
-				id: 0,
-				name: rest.word ?? '',
-				createdAt,
-				fat: rest.fat ?? 0,
-				carb: rest.carb ?? 0,
-				protein: rest.protein ?? 0,
-				cal: rest.calories ?? 0,
-			} as Food
-
-			await DB.add(newFood)
-			set((state) => ({ ...state, mainInput: '', isMatchesValid: false }))
-			loadPage(createdAt)
-		},
-		deleteFood: async () => {
-			const id = get().selectedFood
-			if (id) {
-				await DB!.remove(id)
-				loadPage(get().currentDate.valueOf())
-				set((state) => ({ ...state, selectedFood: null }))
-			}
-		},
-		selectPage: async (n) => {
-			const pageDate = addDaysToDate(n)
-
-			set((state) => {
-				return { ...state, currentDate: pageDate }
-			})
-		},
-		openSheet: (id: number | null) => set((state) => ({ ...state, selectedFood: id })),
-
-		chartRecord: {},
-		chartPage: 0,
-		loadLastSeven: async (n: number) => {
-			const data = await DB.getLastSeven(n)
-			set((state) => ({ ...state, chartRecord: { ...state.chartRecord, [n]: data } }))
-		},
-		selectChartPage: (n) => set((state) => ({ ...state, chartPage: n })),
+		...createHomeSlice(...args),
+		...createStatsSlice(...args),
 	}
 })
-
-export { useStore }
