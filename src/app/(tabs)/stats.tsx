@@ -8,7 +8,7 @@ import { Stack } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import InfinitePager, { InfinitePagerImperativeApi, InfinitePagerPageProps } from 'react-native-infinite-pager'
-import { Button, SizableText, XStack, YStack } from 'tamagui'
+import { Button, SizableText, View, XStack, YStack } from 'tamagui'
 import { CartesianChart, StackedBar } from 'victory-native'
 
 function formatDateRange(page: number) {
@@ -70,6 +70,10 @@ export default function StatsScreen() {
 	)
 }
 
+const fatColor = '#E01A4F'
+const carbColor = '#F15946'
+const proteinColor = '#F9C22E'
+
 function ChartPage({ index }: InfinitePagerPageProps) {
 	const { loadLastSeven } = useStore((state) => state)
 	useEffect(() => {
@@ -98,9 +102,29 @@ function ChartPage({ index }: InfinitePagerPageProps) {
 				)}
 			>
 				{({ points, chartBounds }) => (
-					<StackedBar points={[points.fat, points.carb, points.protein]} chartBounds={chartBounds} colors={['#E01A4F', '#F15946', '#F9C22E']} />
+					<StackedBar points={[points.fat, points.carb, points.protein]} chartBounds={chartBounds} colors={[fatColor, carbColor, proteinColor]} />
 				)}
 			</CartesianChart>
+			<XStack gap="$5" justify="center" mt="$4">
+				{[
+					[fatColor, 'Fat'],
+					[carbColor, 'Carb'],
+					[proteinColor, 'Protein'],
+				].map(([color, text]) => (
+					<XStack items="center" gap="$2">
+						<View
+							bg={color as any}
+							borderTopRightRadius="$5"
+							borderBottomRightRadius="$5"
+							borderTopLeftRadius="$5"
+							borderBottomLeftRadius="$5"
+							height={20}
+							width={20}
+						/>
+						<SizableText size="$5">{text}</SizableText>
+					</XStack>
+				))}
+			</XStack>
 		</YStack>
 	)
 }
