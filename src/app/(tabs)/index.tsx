@@ -1,7 +1,7 @@
+import { deviceLocale } from '@/constants/locale'
 import { useStore } from '@/store'
 import { addDaysToDate } from '@/utils'
 import { ChevronLeft, ChevronRight, Coffee, CornerDownLeft } from '@tamagui/lucide-icons-2'
-import * as Localization from 'expo-localization'
 import { Stack } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler'
@@ -11,8 +11,7 @@ import { Button, Card, Sheet, SizableText, TextArea, View, XStack, YStack } from
 const LINE_HEIGHT = 30
 
 function formatDate(d: Date) {
-	const locale = Localization.getLocales()[0]
-	return d.toLocaleDateString(locale.languageTag, { weekday: 'short', day: '2-digit', month: 'short' })
+	return d.toLocaleDateString(deviceLocale, { weekday: 'short', day: '2-digit', month: 'short' })
 }
 
 export default function HomeScreen() {

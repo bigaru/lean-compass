@@ -1,9 +1,9 @@
 import inter from '@/assets/inter-medium.ttf'
+import { deviceLocale } from '@/constants/locale'
 import { useStore } from '@/store'
 import { addDaysToDate } from '@/utils'
 import { Text as SkiaText, useFont } from '@shopify/react-native-skia'
 import { ChevronLeft, ChevronRight } from '@tamagui/lucide-icons-2'
-import * as Localization from 'expo-localization'
 import { Stack } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -15,15 +15,19 @@ function formatDateRange(page: number) {
 	const upperBoundInclusive = addDaysToDate(page * 7)
 	const lowerBound = addDaysToDate(page * 7 - 6)
 
-	const locale = Localization.getLocales()[0]
-	const l = lowerBound.toLocaleDateString(locale.languageTag, { day: '2-digit', month: 'short' })
-	const u = upperBoundInclusive.toLocaleDateString(locale.languageTag, { day: '2-digit', month: 'short' })
+	const l = lowerBound.toLocaleDateString(deviceLocale, { day: '2-digit', month: 'short' })
+	const u = upperBoundInclusive.toLocaleDateString(deviceLocale, { day: '2-digit', month: 'short' })
 	return `${l} - ${u}`
 }
 
+const numberFormatter = new Intl.NumberFormat(deviceLocale, { notation: 'compact', maximumFractionDigits: 1 })
+
 function formatLabelX(ms: number) {
-	const locale = Localization.getLocales()[0]
-	return new Date(ms).toLocaleDateString(locale.languageTag, { weekday: 'short' })
+	return new Date(ms).toLocaleDateString(deviceLocale, { weekday: 'short' })
+}
+
+function formatNumber(n: number) {
+	return numberFormatter.format(n)
 }
 
 export default function StatsScreen() {
@@ -81,7 +85,7 @@ function ChartPage({ index }: InfinitePagerPageProps) {
 			<CartesianChart
 				data={chartData}
 				padding={{ top: 30 }}
-				yAxis={[{ font: font }]}
+				yAxis={[{ font: font, formatYLabel: formatNumber }]}
 				xAxis={{ font: font, tickValues: chartData.map((d) => d.createdAt), formatXLabel: (val) => formatLabelX(val) }}
 				xKey="createdAt"
 				yKeys={['fat', 'carb', 'protein']}
