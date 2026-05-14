@@ -6,6 +6,7 @@ import { CornerDownLeft } from '@tamagui/lucide-icons-2'
 import { useRef } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import InfinitePager, { InfinitePagerImperativeApi } from 'react-native-infinite-pager'
+import { KeyboardStickyView } from 'react-native-keyboard-controller'
 import { Button, Sheet, TextArea, XStack, YStack } from 'tamagui'
 
 const LINE_HEIGHT = 30
@@ -27,19 +28,20 @@ export default function HomeScreen() {
 					<InfinitePager ref={pagerRef} PageComponent={FoodPage} pageBuffer={1} style={{ flex: 1 }} onPageChange={selectPage} />
 				</GestureHandlerRootView>
 			</YStack>
-
-			<XStack gap={'$2'} p="$2" py="$3" bg="$black6">
-				<TextArea
-					grow={1}
-					bg={isInputValid ? 'white' : '$red4'}
-					maxH={LINE_HEIGHT * 3}
-					placeholder="..."
-					value={mainInput}
-					textAlignVertical="top"
-					onChangeText={setMainInput}
-				/>
-				<Button disabled={!isMatchesValid} theme={isMatchesValid ? 'blue_accent' : 'gray'} onPress={addFood} height={'100%'} icon={CornerDownLeft}></Button>
-			</XStack>
+			<KeyboardStickyView offset={{ opened: 100 }}>
+				<XStack gap={'$2'} p="$2" py="$3" bg="$black6">
+					<TextArea
+						grow={1}
+						bg={isInputValid ? 'white' : '$red4'}
+						maxH={LINE_HEIGHT * 3}
+						placeholder="..."
+						value={mainInput}
+						textAlignVertical="top"
+						onChangeText={setMainInput}
+					/>
+					<Button disabled={!isMatchesValid} theme={isMatchesValid ? 'blue_accent' : 'gray'} onPress={addFood} height={'100%'} icon={CornerDownLeft}></Button>
+				</XStack>
+			</KeyboardStickyView>
 			<Sheet open={!!selectedFood} snapPoints={[25]} snapPointsMode="percent" dismissOnSnapToBottom onOpenChange={() => openSheet(null)}>
 				<Sheet.Overlay bg="$shadow6" transition="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
 				<Sheet.Handle />
